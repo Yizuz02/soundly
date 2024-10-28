@@ -1,0 +1,26 @@
+# Sistema
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+# Entorno virtual
+venv/
+env/
+
+# Configuración de editor
+.vscode/
+.idea/
+
+# Archivos de entorno y claves de configuración
+*.env
+
+# Archivos de Django
+media/
+staticfiles/
+db.sqlite3
+
+# Archivos de migración de bases de datos
+*/migrations/*.pyc
+*/migrations/*.pyo
+*/migrations/__pycache__/
+*/migrations/*.py
