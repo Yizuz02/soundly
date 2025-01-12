@@ -18,6 +18,7 @@ env/
 media/
 staticfiles/
 db.sqlite3
+*/keras_models/*.joblib
 
 # Archivos de migración de bases de datos
 */migrations/*.pyc

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+        <title>Upload Song</title>
+        {% load static %}
+        <link rel="stylesheet" href="{% static 'streaming/css/styles.css' %}">
+    </head>
+<body>
+    <div class="contenedor-pagina">
+        {% include 'components/header2.html' with header_title="SUBE TU MÚSICA" %}
+        <div class="contenedor-principal-upload">
+            <h1 class="seccion-2">
+                SUBIR CANCIÓN
+            </h1>
+            <div class="contenedor-formulario-song">
+                <form method="post" enctype="multipart/form-data" action="{% url 'upload_song' %}" class="formulario-song">
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+                    <div class="contenedor-formulario-upload-1">
+                        <div class="form-group2">
+                            <div class="form-group-tag2">
+                                {{ form.title.label_tag }}
+                            </div>
+                            <div class="form-group-input2">
+                                {{ form.title }}
+                            </div>
+                        </div>
+                        <div class="form-group2">
+                            <div class="form-group-tag2">
+                                {{ form.release_date.label_tag }}
+                            </div>
+                            <div class="form-group-input2">
+                                {{ form.release_date }}
+                            </div>
+                        </div>
+                        <div class="form-group3">
+                            <div class="form-group-tag2">
+                                {{ form.cover_image.label_tag }}
+                            </div>
+                            <div class="form-group-input2">
+                                <div id="image-drop-zone" class="drop-zone">
+                                    <span id="drop-text">Arrastra y suelta archivo de imagen para subirlo</span>
+                                    {{ form.cover_image }}
+                                    <button type="button" class="boton-drop">Seleccionar Archivo</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group3">
+                            <div class="form-group-tag2">
+                                {{ form.file.label_tag }}
+                            </div>
+                            <div class="form-group-input2">
+                                <div id="audio-drop-zone" class="drop-zone">
+                                    <span id="audio-drop-text">Arrastra y suelta archivo de audio para subirlo</span>
+                                    {{ form.file }}
+                                    <button type="button" class="boton-drop">Seleccionar Archivo</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="contenedor-formulario-upload-2">
+                        <div id="image-preview" class="preview">
+                            <img src="{% static 'img/song_icon.png' %}" alt="Vista previa de imagen">
+                        </div>
+                        <button type="submit" class="boton-ovalo-upload">PUBLICAR</button>
+                        
+                    </div>
+                    
+                </form>
+            </div>
+            
+            <p class="nota-3">&#9836;</p>
+            <p class="nota-4">&#9836;</p>
+            <a href="{% url 'upload' %}" class="boton-regresar">
+                <img src="{% static 'img/back.png' %}" alt="Atras">
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Vista previa de la imagen
+        const imageDropZone = document.getElementById('image-drop-zone');
+        const imageFileInput = document.getElementById('cover-image-input');
+        const imageSelectButton = imageDropZone.querySelector('button');
+        const imagePreview = document.getElementById('image-preview');
+    
+        imageSelectButton.addEventListener('click', () => {
+            imageFileInput.click();
+        });
+    
+        imageFileInput.addEventListener('change', () => {
+            showImagePreview(imageFileInput.files[0]);
+        });
+    
+        imageDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageDropZone.classList.add('drag-over');
+        });
+    
+        imageDropZone.addEventListener('dragleave', () => {
+            imageDropZone.classList.remove('drag-over');
+        });
+    
+        imageDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageDropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            imageFileInput.files = e.dataTransfer.files;
+            showImagePreview(file);
+        });
+    
+        function showImagePreview(file) {
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.innerHTML = `<img src="${e.target.result}" alt="Vista previa de imagen">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.innerHTML = '<p>No se seleccionó un archivo de imagen válido.</p>';
+            }
+        }
+    
+        // Vista previa del archivo de audio
+        const audioDropZone = document.getElementById('audio-drop-zone');
+        const audioFileInput = document.getElementById('file-input');
+        const audioSelectButton = audioDropZone.querySelector('button');
+    
+        audioSelectButton.addEventListener('click', () => {
+            audioFileInput.click();
+        });
+    
+    
+        audioDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            audioDropZone.classList.add('drag-over');
+        });
+    
+        audioDropZone.addEventListener('dragleave', () => {
+            audioDropZone.classList.remove('drag-over');
+        });
+    
+        audioDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            audioDropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            audioFileInput.files = e.dataTransfer.files;
+        });
+    
+    </script>
+    
+</body>
+</html>

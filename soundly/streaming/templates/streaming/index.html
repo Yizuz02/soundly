@@ -1,16 +1,67 @@
-<!-- streaming/templates/streaming/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Streaming</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <title>Soundly</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'streaming/css/styles.css' %}">
 </head>
 <body>
-    <h1>Reproductor de Música</h1>
-    <audio controls>
-        <source src="{% url 'stream_audio' 'sample.mp3' %}" type="audio/mpeg">
-        Tu navegador no soporta el elemento de audio.
-    </audio>
+    <div class="contenedor-pagina">
+        {% include 'components/header.html' with header_title="SOUNDLY MUSIC" %}
+        <div class="contenedor-principal">
+            <div class="contenedor-principal-notas">
+                <p class="nota">&#9836;</p>
+            </div>
+            <div class="contenedor-principal-titulo">
+                <div class="circulos"></div>
+                <div class="circulos-extra"></div>
+                {% if is_authenticated %}
+                    <p class="texto-titulo">{{ mensaje }}</p> 
+                    <p class="texto-titulo-negritas">{{ user.username }}</p> 
+                    <p class="texto-titulo">¿QUÉ QUIERES ESCUCHAR HOY?</p> 
+                {% else %}
+                    <p class="texto-titulo">ENCUENTRA Y DESCUBRE</p> 
+                    <p class="texto-titulo-negritas">LA MÚSICA</p> 
+                    <p class="texto-titulo">QUE VA CONTIGO</p> 
+                {% endif %}
+            </div>
+            <div class="contenedor-principal-notas">
+                <p class="nota">&#9836;</p>
+            </div>
+        </div>
+        <div class="contenedor-botones-inicio">
+            <div class="contenedor-botones-inicio-elemento"><p class="estrella-2">&#10022;</p> </div>
+            {% if is_authenticated %}
+                <div class="contenedor-botones-inicio-elemento">
+                    <a href="{% url 'discover' %}" class="boton-inicio">DESCUBRE</a>
+                </div>
+                <div class="contenedor-botones-inicio-elemento">
+                    <a href="{% url 'playlist_list' %}" class="boton-inicio">PLAYLISTS</a>
+                </div>
+                <div class="contenedor-botones-inicio-elemento">
+                    <a href="{% url 'upload' %}" class="boton-inicio">SUBE TU MÚSICA</a>
+                </div>
+            {% else %}
+                <div class="contenedor-botones-inicio-elemento">
+                    <a href="{% url 'login' %}" class="boton-inicio">DESCUBRE</a>
+                </div>
+                <div class="contenedor-botones-inicio-elemento">
+                    <a href="{% url 'login' %}" class="boton-inicio">INICIAR SESIÓN</a>
+                </div>
+                <div class="contenedor-botones-inicio-elemento">
+                    <a href="{% url 'login' %}" class="boton-inicio">SUBE TU MÚSICA</a>
+                </div>
+            {% endif %}
+            
+            
+            <div class="contenedor-botones-inicio-elemento"><p class="estrella-2">&#10022;</p> </div>
+        </div>
+    </div>
+       
 </body>
 </html>

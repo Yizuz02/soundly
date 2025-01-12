@@ -1,0 +1,11 @@
+<h2>DESCUBRE</h2>
+<ul>
+    {% for song in recommendations %}
+        <li>
+            <strong>{{ song.title }}</strong> - {{ song.user }}<br>
+            Género: {{ song.track_genre }}
+        </li>
+    {% empty %}
+        <p>No hay recomendaciones disponibles.</p>
+    {% endfor %}
+</ul>

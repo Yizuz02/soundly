@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <title>Upload Soundly</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'streaming/css/styles.css' %}">
+</head>
+<body>
+    <div class="contenedor-pagina">
+        {% include 'components/header2.html' with header_title="SUBE TU MÚSICA" %}
+        <div class="contenedor-principal-upload">
+            <h1 class="seccion-2">
+                AGREGAR...
+            </h1>
+            <div class="contenedor-botones-upload">
+                <div class="contenedor-boton-upload">
+                    <a href="{% url 'upload_song' %}" class="boton-upload">CANCIÓN</a>
+                    <img src="{% static 'img/song_icon.png' %}" alt="Icono Canción">
+                </div>
+                <div class="contenedor-boton-upload">
+                    <a href="{% url 'upload_album' %}" class="boton-upload">ÁLBUM</a>
+                    <img src="{% static 'img/album_icon.png' %}" alt="Icono Álbum">
+                </div>
+            </div>
+            <p class="nota-3">&#9836;</p>
+            <p class="nota-4">&#9836;</p>
+            <a href="{% url 'home' %}" class="boton-regresar">
+                <img src="{% static 'img/back.png' %}" alt="Atras">
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

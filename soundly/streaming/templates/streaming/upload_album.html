@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+        <title>Upload Song</title>
+        {% load static %}
+        <link rel="stylesheet" href="{% static 'streaming/css/styles.css' %}">
+    </head>
+<body>
+    <div class="contenedor-pagina">
+        {% include 'components/header2.html' with header_title="SUBE TU MÚSICA" %}
+        <div class="contenedor-principal-upload">
+            <h1 class="seccion-2">
+                SUBIR ÁLBUM
+            </h1>
+            <div class="contenedor-formulario-upload">
+                <form method="post" enctype="multipart/form-data" class="contenedor-formulario-album">
+                    {% csrf_token %}
+                    {{ album_form.non_field_errors }}
+                    <div class="contenedor-formulario-album-1">
+                        <div class="contenedor-formulario-upload-1">
+                            <div class="form-group4">
+                                <div class="form-group-tag2">
+                                    {{ album_form.title.label_tag }}
+                                </div>
+                                <div class="form-group-input2">
+                                    {{ album_form.title }}
+                                </div>
+                            </div>
+                            <div class="form-group4">
+                                <div class="form-group-tag2">
+                                    {{ album_form.release_date.label_tag }}
+                                </div>
+                                <div class="form-group-input2">
+                                    {{ album_form.release_date }}
+                                </div>
+                            </div>
+                            <div class="form-group5">
+                                <div class="form-group-tag2">
+                                    {{ album_form.cover_image.label_tag }}
+                                </div>
+                                <div class="form-group-input2">
+                                    <div id="image-drop-zone" class="drop-zone">
+                                        <span id="drop-text">Arrastra y suelta archivo de imagen para subirlo</span>
+                                        {{ album_form.cover_image }}
+                                        <button type="button" name="add_song" class="boton-drop">Seleccionar Archivo</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="contenedor-formulario-upload-2">
+                            <div id="image-preview" class="preview">
+                                <img src="{% static 'img/album_icon.png' %}" alt="Vista previa de imagen" >
+                            </div>
+                        </div>
+                    </div>
+                    <div class="contenedor-formulario-album-2">
+                        <div class="contenedor-formulario-upload-select">
+                            <h2>Tus canciones</h2>
+                            <div class="song-list" id="song-list">
+                                {% for song in user_songs %}
+                                <div class="song-item" data-song-id="{{ song.id }}" data-song-title="{{ song.title }}">
+                                    {{ song.title }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="contenedor-formulario-upload-add">
+                           
+                        </div>
+                        <div class="contenedor-formulario-upload-tracklist">
+                            <h2>Tracklist</h2>
+                            <fieldset>
+                                <ul id="tracklist">
+                                    
+                                </ul>
+                            </fieldset>
+                            <button type="submit" name="add_album" class="boton-ovalo-upload-2">PUBLICAR</button>
+                        </div>
+                    </div>
+                </form>
+                <form method="post" enctype="multipart/form-data" class="contenedor-formulario-add">
+                    {% csrf_token %}
+                    {{ new_song_form.non_field_errors }}
+                    <h2>Subir Canciones</h2>
+                    <div class="form-group2">
+                        <div class="form-group-tag2">
+                            {{ new_song_form.title.label_tag }}
+                        </div>
+                        <div class="form-group-input2">
+                            {{ new_song_form.title }}
+                        </div>
+                    </div>
+                    <div class="form-group6">
+                        <div id="audio-drop-zone" class="drop-zone2">
+                            <span id="audio-drop-text">Arrastra y suelta archivo de audio para subirlo</span>
+                            {{ new_song_form.file }}
+                            <button type="button" class="boton-drop">Seleccionar Archivo</button>
+                        </div>
+                    </div>
+                    <div class="contenedor-boton-new-song">
+                        <button type="submit" name="add_song" class="boton-ovalo-new-song">Agregar</button>
+                    </div>
+                </form>
+            </div>
+            
+            <p class="nota-3">&#9836;</p>
+            <p class="nota-4">&#9836;</p>
+            <a href="{% url 'upload' %}" class="boton-regresar">
+                <img src="{% static 'img/back.png' %}" alt="Atras">
+            </a>
+        </div>
+    </div>
+    <script>
+        // Vista previa de la imagen
+        const imageDropZone = document.getElementById('image-drop-zone');
+        const imageFileInput = document.getElementById('cover-image-input');
+        const imageSelectButton = imageDropZone.querySelector('button');
+        const imagePreview = document.getElementById('image-preview');
+    
+        imageSelectButton.addEventListener('click', () => {
+            imageFileInput.click();
+        });
+    
+        imageFileInput.addEventListener('change', () => {
+            showImagePreview(imageFileInput.files[0]);
+        });
+    
+        imageDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageDropZone.classList.add('drag-over');
+        });
+    
+        imageDropZone.addEventListener('dragleave', () => {
+            imageDropZone.classList.remove('drag-over');
+        });
+    
+        imageDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageDropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            imageFileInput.files = e.dataTransfer.files;
+            showImagePreview(file);
+        });
+    
+        function showImagePreview(file) {
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.innerHTML = `<img src="${e.target.result}" alt="Vista previa de imagen">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.innerHTML = '<p>No se seleccionó un archivo de imagen válido.</p>';
+            }
+        }
+    
+        // Vista previa del archivo de audio
+        const audioDropZone = document.getElementById('audio-drop-zone');
+        const audioFileInput = document.getElementById('file-input');
+        const audioSelectButton = audioDropZone.querySelector('button');
+    
+        audioSelectButton.addEventListener('click', () => {
+            audioFileInput.click();
+        });
+        
+    
+        audioDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            audioDropZone.classList.add('drag-over');
+        });
+    
+        audioDropZone.addEventListener('dragleave', () => {
+            audioDropZone.classList.remove('drag-over');
+        });
+    
+        audioDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            audioDropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            audioFileInput.files = e.dataTransfer.files;
+        });
+
+        const songSelect = document.getElementById('song-select');
+        const tracklist = document.getElementById('tracklist');
+        const newSongsFromBackend = JSON.parse('{{ new_songs | escapejs }}');
+        console.log(newSongsFromBackend)
+        newSongsFromBackend.forEach(song => {
+            const li = document.createElement('li');
+            li.textContent = song.title;
+            tracklist.appendChild(li);
+        });
+        // Escucha cambios en los checkboxes dentro del contenedor
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const songList = document.getElementById('song-list');
+            const tracklist = document.getElementById('tracklist');
+            let songs = JSON.parse('{{ new_songs | escapejs }}');
+
+            // Función para actualizar el tracklist
+            function updateTracklist() {
+                tracklist.innerHTML = '';
+                songs.forEach((song, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'tracklist-item';
+                    
+                    // Título de la canción
+                    const titleSpan = document.createElement('span');
+                    titleSpan.textContent = song.title;
+                    li.appendChild(titleSpan);
+
+                    // Contenedor de botones
+                    const controls = document.createElement('div');
+                    controls.className = 'song-controls';
+
+                    // Botón mover arriba
+                    if (index > 0) {
+                        const moveUpBtn = createButton('▲', () => moveSong(index, index - 1));
+                        controls.appendChild(moveUpBtn);
+                    }
+
+                    // Botón mover abajo
+                    if (index < songs.length - 1) {
+                        const moveDownBtn = createButton('▼', () => moveSong(index, index + 1));
+                        controls.appendChild(moveDownBtn);
+                    }
+
+                    // Botón eliminar
+                    const removeBtn = createButton('×', () => removeSong(index));
+                    controls.appendChild(removeBtn);
+
+                    li.appendChild(controls);
+                    tracklist.appendChild(li);
+                });
+
+                updateServer(songs);
+            }
+
+            // Función para crear botones
+            function createButton(text, onClick) {
+                const button = document.createElement('button');
+                button.textContent = text;
+                button.className = 'tracklist-btn';
+                button.addEventListener('click', onClick);
+                return button;
+            }
+
+            // Función para mover canciones
+            function moveSong(fromIndex, toIndex) {
+                const [movedSong] = songs.splice(fromIndex, 1);
+                songs.splice(toIndex, 0, movedSong);
+                updateTracklist();
+            }
+
+            // Función para eliminar canciones
+            function removeSong(index) {
+                songs.splice(index, 1);
+                updateTracklist();
+            }
+
+            // Función para añadir una nueva canción al tracklist
+            function addSongToTracklist(songTitle, songId) {
+                const newSong = {
+                    title: songTitle,
+                    id: songId,
+                    type: 'existing'
+                };
+                
+                // Verificar si la canción ya está en el tracklist
+                const songExists = songs.some(song => song.id === songId);
+                if (!songExists) {
+                    songs.push(newSong);
+                    updateTracklist();
+                }
+            }
+
+            // Función para actualizar el servidor
+            function updateServer(songsList) {
+                fetch('/update_songs/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({ new_songs: songsList })
+                });
+            }
+
+            // Agregar evento click a las canciones en la lista
+            songList.addEventListener('click', function(e) {
+                const songItem = e.target.closest('.song-item');
+                if (songItem) {
+                    const songId = songItem.dataset.songId;
+                    const songTitle = songItem.dataset.songTitle;
+                    addSongToTracklist(songTitle, songId);
+                }
+            });
+
+            // Inicializar tracklist
+            updateTracklist();
+        });
+    </script>
+</body>
+</html>

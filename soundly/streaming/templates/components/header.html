@@ -1,0 +1,16 @@
+{% load static %}
+<div class="contenedor-cabecera">
+    <div class="contenedor-estrella-1">
+        {% if is_authenticated %}
+        <img src="{% static 'img/profile/default.png' %}" alt="Perfil">
+        {% else %}
+            <p class="estrella">&#10022;</p> 
+        {% endif %}
+    </div>
+    <div class="contenedor-ovalo-titulo">
+        <h1>{{ header_title }}</h1>
+    </div>
+    <div class="contenedor-estrella-2">
+        <p class="estrella">&#10022;</p> 
+    </div>
+</div>

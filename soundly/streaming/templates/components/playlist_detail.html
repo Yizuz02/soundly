@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>{{ playlist.name }}</h2>
+<p>{{ playlist.description }}</p>
+<p>Created at: {{ playlist.created_at }}</p>
+<p>Updated at: {{ playlist.updated_at }}</p>
+<p>Number of Songs: {{ playlist.songs.count }}</p>
+<a href="{% url 'playlist_list' %}" class="btn btn-secondary">Back to Playlists</a>
+{% endblock %}

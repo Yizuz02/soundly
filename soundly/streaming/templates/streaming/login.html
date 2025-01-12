@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <title>Login Soundly</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'streaming/css/styles.css' %}">
+</head>
+<body>
+    <div class="contenedor-pagina">
+        <div class="contenedor-cabecera">
+            <div class="contenedor-estrella-3">
+                <p class="estrella-2">&#10022;</p> 
+            </div>
+            <a href="{% url 'register' %}" class="boton-ovalo-login">
+                <h2>¿PRIMERA VEZ? REGÍSTRATE</h2>
+            </a>
+            <div class="contenedor-titulo-login">
+                <h2>SOUNDLY MUSIC</h2>
+            </div>
+        </div>
+        <div class="contenedor-principal-login">
+            <div class="contenedor-formulario-login">
+                <div class="separador-titulo-seccion"></div>
+                <h1 class="seccion">INICIAR SESIÓN</h1>
+                <form method="post" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+                    <div class="form-group">
+                        <div class="form-group-tag">
+                            {{ form.username.label_tag }}
+                        </div>
+                        <div class="form-group-input">
+                            {{ form.username }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-group-tag">
+                            {{ form.password.label_tag }}
+                        </div>
+                        <div class="form-group-input">
+                            {{ form.password }}
+                        </div>
+                        <button type="button" id="togglePassword" class="toggle-password">
+                            👁
+                        </button>
+                    </div>
+                    <div class="contenedor-boton-form">
+                        <button type="submit" class="boton-ovalo-login">Ingresar</button>
+                    </div>
+                </form>
+                <p class="nota-2">&#9836;</p>
+            </div>
+            <div class="contenedor-fig-login">
+                <div class="circulos-1"></div>
+                <div class="circulos-2"></div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordField = document.getElementById('id_password');
+  
+    togglePassword.addEventListener('click', function () {
+        // Alternar entre 'text' y 'password'
+        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordField.setAttribute('type', type);
+      
+        // Alternar clase para cambiar color
+        this.classList.toggle('password-visible');
+    });
+</script>
+
+</html>

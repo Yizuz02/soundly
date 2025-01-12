@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis canciones</title>
+</head>
+<body>
+    <h1>Mis canciones</h1>
+    <ul>
+        {% for song in songs %}
+            <li>
+                <strong>{{ song.title }}</strong> - {{ song.track_genre }}
+                <audio controls>
+                    <source src="{{ song.file.url }}" type="audio/mpeg">
+                    Tu navegador no soporta el elemento de audio.
+                </audio>
+            </li>
+        {% empty %}
+            <li>No has subido canciones aún.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
