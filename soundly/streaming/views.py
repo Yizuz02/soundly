@@ -20,9 +20,11 @@ from django.views.generic.edit import FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 from .forms import CustomAuthenticationForm, RegistroUsuarioForm, SongUploadForm, AlbumForm, NewSongForm, PlaylistForm
-from .models import Song, Album, Song, Playlist
+from .models import Song, Album, Song, Playlist, SongHistory
 from .recommendations import recommend_songs_with_similarity
 
 def get_unique_file_path(directory, filename):
@@ -275,33 +277,33 @@ class PlaylistView(LoginRequiredMixin, View):
                 'user': request.user,
                 'playlist_form': playlist_form,
             })
-
-    def post(self, request):
-        playlist_form = PlaylistForm(request.POST)
-        if playlist_form.is_valid():
-            new_playlist = playlist_form.save(commit=False)
-            new_playlist.user = request.user
-            new_playlist.save()
-            return redirect('playlist_list')
-        return render(request, 'streaming/playlist_list.html', {
-            'is_authenticated': request.user.is_authenticated,
-            'user': request.user,
-            'playlist_form': playlist_form
-        })
+        
 
     def delete(self, request, pk):
         playlist = get_object_or_404(Playlist, pk=pk, user=request.user)
         playlist.delete()
         return JsonResponse({'status': 'success'})
 
-    def post(self, request, pk, song_id):
+    def post(self, request, pk=None, song_id=None):
         if request.method != 'POST':
             return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
-            
-        playlist = get_object_or_404(Playlist, pk=pk, user=request.user)
-        song = get_object_or_404(Song, pk=song_id)
-        playlist.songs.remove(song)
-        return JsonResponse({'status': 'success'})
+        if pk:
+            playlist = get_object_or_404(Playlist, pk=pk, user=request.user)
+            song = get_object_or_404(Song, pk=song_id)
+            playlist.songs.remove(song)
+            return JsonResponse({'status': 'success'})
+        else:
+            playlist_form = PlaylistForm(request.POST)
+            if playlist_form.is_valid():
+                new_playlist = playlist_form.save(commit=False)
+                new_playlist.user = request.user
+                new_playlist.save()
+                return redirect('playlist_list')
+            return render(request, 'streaming/playlist_list.html', {
+                'is_authenticated': request.user.is_authenticated,
+                'user': request.user,
+                'playlist_form': playlist_form
+            })
 
 class RecommendationsView(LoginRequiredMixin, ListView):
     template_name = 'streaming/recommendations.html'
@@ -322,19 +324,216 @@ class RecommendationsView(LoginRequiredMixin, ListView):
         """
         user = self.request.user
         return recommend_songs_with_similarity(user)
-    
-def play_recommended_songs(request, song_id):
-    # Obtener la canción seleccionada
-    selected_song = get_object_or_404(Song, id=song_id)
 
-    # Generar las recomendaciones
-    recommended_songs = recommend_songs_with_similarity(request.user)
 
-    # Reorganizar las canciones para empezar desde la seleccionada
-    start_song_index = next((index for index, element in enumerate(recommended_songs) if element['song'].id == selected_song.id), 0)
-    reordered_songs = recommended_songs[start_song_index:] + recommended_songs[:start_song_index]
+class PlayPlaylistSongsView(View):
+    template_name = 'streaming/play_songs.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Verificar si el usuario está autenticado
+        context.update({
+            'is_authenticated': self.request.user.is_authenticated,
+            'user': self.request.user
+        })
+        return context
+    def get(self, request, playlist_id):
+        # Obtener la canción seleccionada
+        # Obtener la playlist
+        playlist = get_object_or_404(Playlist, id=playlist_id, user=request.user)
+        
+        # Obtener las canciones de la playlist
+        songs = list(playlist.songs.all())
+
+
+        # Agregar álbumes relacionados a las canciones recomendadas
+        songs_with_albums = [
+            {'song': song, 'albums': song.albums.all()} for song in songs
+        ]
+
+
+        # Obtener las listas de reproducción del usuario
+        playlists = Playlist.objects.filter(user=request.user)
+
+        # Renderizar la respuesta
+        return render(request, self.template_name, {
+            'songs': songs_with_albums,
+            'playlists': playlists,
+            'is_authenticated': self.request.user.is_authenticated,
+            'user': self.request.user,
+            'return': True,
+            'playlist_id': playlist_id
+        })
+
+class PlayRecommendedSongsView(View):
+    template_name = 'streaming/play_songs.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Verificar si el usuario está autenticado
+        context.update({
+            'is_authenticated': self.request.user.is_authenticated,
+            'user': self.request.user
+        })
+        return context
+    def get(self, request, song_id):
+        # Obtener la canción seleccionada
+        selected_song = get_object_or_404(Song, id=song_id)
+
+        # Generar las recomendaciones
+        recommended_songs = recommend_songs_with_similarity(request.user)
+
+        # Reorganizar las canciones para empezar desde la seleccionada
+        start_song_index = next((index for index, element in enumerate(recommended_songs) 
+                                 if element['song'].id == selected_song.id), 0)
+        reordered_songs = recommended_songs[start_song_index:] + recommended_songs[:start_song_index]
+
+        # Obtener las listas de reproducción del usuario
+        playlists = Playlist.objects.filter(user=request.user)
+
+        # Renderizar la respuesta
+        return render(request, self.template_name, {
+            'selected_song': selected_song,
+            'songs': reordered_songs,
+            'playlists': playlists,
+            'is_authenticated': self.request.user.is_authenticated,
+            'user': self.request.user,
+            'return': False
+        })
+
+
+@csrf_exempt
+def add_to_playlist(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        playlist_name = data.get('playlist')
+        song_id = data.get('song_id')
+
+        try:
+            playlist = Playlist.objects.get(name=playlist_name, user=request.user)
+            song = Song.objects.get(id=song_id)
+            playlist.songs.add(song)
+            return JsonResponse({'message': 'Canción agregada exitosamente.'}, status=200)
+        except Playlist.DoesNotExist:
+            return JsonResponse({'error': 'Playlist no encontrada.'}, status=404)
+        except Song.DoesNotExist:
+            return JsonResponse({'error': 'Canción no encontrada.'}, status=404)
+    return JsonResponse({'error': 'Método no permitido.'}, status=405)
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from .models import Song, SongHistory
+
+@login_required
+@csrf_exempt
+def register_play(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        song_id = data.get('song_id')
+
+        try:
+            song = Song.objects.get(id=song_id)
+            user = request.user
+
+            # Registrar o actualizar historial
+            history, created = SongHistory.objects.get_or_create(user=user, song=song)
+            if not created:
+                history.play_count += 1
+                history.save()
+
+            return JsonResponse({'message': 'Reproducción registrada exitosamente.'}, status=200)
+
+        except Song.DoesNotExist:
+            return JsonResponse({'error': 'Canción no encontrada.'}, status=404)
+    return JsonResponse({'error': 'Método no permitido.'}, status=405)
+
+
+class UserProfileView(View):
+    template_name = 'streaming/user_profile.html'
+
+    def get(self, request, username):
+        # Obtener el usuario por nombre de usuario
+        user = get_object_or_404(User, username=username)
+        print(user)
+
+        # Obtener las canciones y álbumes subidos por el usuario
+        songs = Song.objects.filter(user=user)
+        print(songs)
+        albums = Album.objects.filter(user=user)
+
+        # Renderizar la plantilla con los datos
+        return render(request, self.template_name, {
+            'profile_user': user,
+            'songs': songs,
+            'albums': albums,
+        })
+
+    @method_decorator(csrf_exempt)
+    def post(self, request, username):
+        action = request.POST.get('action')
+        song_id = request.POST.get('song_id')
+        album_id = request.POST.get('album_id')
+        new_name = request.POST.get('new_name')
+
+        if action == 'edit_song' and song_id and new_name:
+            song = get_object_or_404(Song, id=song_id, user=request.user)
+            song.title = new_name
+            song.save()
+            return JsonResponse({'status': 'success', 'message': 'Canción actualizada'})
+
+        elif action == 'delete_song' and song_id:
+            song = get_object_or_404(Song, id=song_id, user=request.user)
+            song.delete()
+            return JsonResponse({'status': 'success', 'message': 'Canción eliminada'})
+
+        elif action == 'edit_album' and album_id and new_name:
+            album = get_object_or_404(Album, id=album_id, user=request.user)
+            album.name = new_name
+            album.save()
+            return JsonResponse({'status': 'success', 'message': 'Álbum actualizado'})
+
+        elif action == 'delete_album' and album_id:
+            album = get_object_or_404(Album, id=album_id, user=request.user)
+            album.delete()
+            return JsonResponse({'status': 'success', 'message': 'Álbum eliminado'})
+
+        return JsonResponse({'status': 'error', 'message': 'Acción no válida'})
     
-    return render(request, 'streaming/play_songs.html', {
-        'selected_song': selected_song,
-        'songs': reordered_songs,
-    })
+class DeleteSongView(LoginRequiredMixin, View):
+    def post(self, request, song_id):
+        song = get_object_or_404(Song, id=song_id)
+
+        # Verificar que el usuario autenticado sea el creador
+        if song.user != request.user:
+            return redirect('user_profile', username=request.user.username)  # Redirigir si no es el creador
+
+        song.delete()
+        return redirect('user_profile', username=request.user.username)
+
+class DeleteAlbumView(LoginRequiredMixin, View):
+    def post(self, request, album_id):
+        album = get_object_or_404(Album, id=album_id)
+
+        # Verificar que el usuario autenticado sea el creador
+        if album.user != request.user:
+            return redirect('user_profile', username=request.user.username)  # Redirigir si no es el creador
+
+        album.delete()
+        return redirect('user_profile', username=request.user.username)
+
+@csrf_exempt  # Permite solicitudes sin un token CSRF (útil para desarrollo)
+def update_name(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)  # Parsear el cuerpo de la solicitud
+            new_name = data.get('name')  # Obtener el nombre nuevo
+
+            # Aquí deberías actualizar tu modelo (por ejemplo, User)
+            # Suponiendo que el modelo sea `User` y tengas al usuario en la sesión
+            user = request.user
+            user.username = new_name
+            user.save()
+
+            return JsonResponse({'status': 'success', 'name': user.username})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)

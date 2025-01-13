@@ -2,7 +2,9 @@
 <div class="contenedor-cabecera">
     <div class="contenedor-estrella-1">
         {% if is_authenticated %}
-        <img src="{% static 'img/profile/default.png' %}" alt="Perfil">
+        <a href="{% url 'user_profile' user.username %}" class="contenedor-cabecera-usuario">
+            <img src="{% static 'img/profile/default.png' %}" alt="Perfil">
+        </a>
         {% else %}
             <p class="estrella">&#10022;</p> 
         {% endif %}

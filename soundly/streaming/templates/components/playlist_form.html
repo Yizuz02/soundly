@@ -1,5 +1,5 @@
 {% load static %}
-<form method="post" enctype="multipart/form-data" class="contenedor-crear-playlist">
+<form method="post" action="{% url 'playlist_list' %}" enctype="multipart/form-data" class="contenedor-crear-playlist">
     {% csrf_token %}
     {{ playlist_form.non_field_errors }}
     <div class="form-group7">

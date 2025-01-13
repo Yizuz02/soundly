@@ -77,9 +77,23 @@
                         <strong>+</strong>
                     </button>
                 </div>
+                <div class="contenedor-add-song-lista" id="menu-playlist">
+                    <div class="contenedor-add-song-titulo">Agregar a playlist</div>
+                    {% for playlist in playlists %}
+                        <button class="contenedor-add-song-play">
+                            {{ playlist.name }}
+                        </button>
+                    {% empty %}
+                        <p>Aun no has creado ninguna playlist</p>
+                    {% endfor %}
+                </div>
             </div>
             <p class="nota-5">&#9836;</p>
-            <a href="{% url 'discover' %}" class="boton-regresar">
+            {% if return %}
+                <a href="{% url 'playlist_detail' playlist_id %}" class="boton-regresar">
+            {% else %}
+                <a href="{% url 'discover' %}" class="boton-regresar">
+            {% endif %}
                 <img src="{% static 'img/back.png' %}" alt="Atras">
             </a>
         </div>
@@ -92,6 +106,7 @@
         const songs = [
             {% for item in songs %}
                 {
+                    id: "{{ item.song.id }}",
                     title: "{{ item.song.title|escapejs }}",
                     file: "{{ item.song.file.url|escapejs }}",
                     {% if item.song.cover_image %}
@@ -117,11 +132,15 @@
         const volumeToggleButton = document.getElementById('volume-toggle');
         const volumeContainer = document.querySelector('.volume-container');
         const inputRange = document.getElementById("volumeRange");
+        const playlistToggleButton = document.getElementById('show-menu');
+        const playlistContainer = document.getElementById('menu-playlist');
     
         const progressBarFilled = document.getElementById('progress-bar-filled');
         const progressBar = document.querySelector('.progress-bar');
         const progressBarTooltip = document.getElementById('progress-bar-tooltip');
-        
+        let listenedTime = 0;
+        const MIN_LISTEN_TIME = 30; 
+                
 
         function displayRemainingSongs() {
             const remainingSongsContainer = document.getElementById('remaining-songs');
@@ -156,6 +175,50 @@
             displayRemainingSongs();
         }
 
+        function registerPlay(songId) {
+            fetch('/register-play/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    song_id: songId
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Reproducción registrada.');
+                } else {
+                    console.error('Error al registrar la reproducción.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+        
+
+        function addToPlaylist(playlistName, songId) {
+            fetch('/add-to-playlist/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}' // Asegúrate de incluir el token CSRF
+                },
+                body: JSON.stringify({
+                    playlist: playlistName,
+                    song_id: songId
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Canción agregada a la playlist!');
+                } else {
+                    alert('Error al agregar la canción.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
         // Alternar entre play y pausa
         playPauseButton.addEventListener('click', () => {
             if (audioPlayer.paused) {
@@ -173,6 +236,10 @@
                 currentSongIndex--;
                 loadSong(currentSongIndex);
             }
+            else{
+                audioPlayer.currentTime = 0
+                listenedTime = 0;
+            }
         });
 
         // Botón siguiente
@@ -180,7 +247,15 @@
             if (currentSongIndex < songs.length - 1) {
                 currentSongIndex++;
                 loadSong(currentSongIndex);
+                listenedTime = 0;
             }
+        });
+
+        document.querySelectorAll('.contenedor-add-song-play').forEach(button => {
+            button.addEventListener('click', () => {
+                const playlistName = button.textContent.trim(); // Obtener el nombre de la playlist
+                addToPlaylist(playlistName, songs[currentSongIndex].id);
+            });
         });
 
         // Reproducción automática al terminar
@@ -189,6 +264,7 @@
                 currentSongIndex++;
                 loadSong(currentSongIndex);
             }
+            listenedTime = 0;
         });
 
         // Control de volumen
@@ -203,11 +279,22 @@
             volumeControl.style.background = `linear-gradient(90deg, ${activeColor} ${ratio}%, ${inactiveColor} ${ratio}%)`;
         });
 
+        playlistToggleButton.addEventListener('click', () => {
+            playlistContainer.style.display = playlistContainer.style.display === 'none' ? 'flex' : 'none';
+        });
 
         // Actualizar la barra de progreso
         audioPlayer.addEventListener('timeupdate', () => {
             const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
             progressBarFilled.style.width = progress + '%';
+            if (!audioPlayer.paused) {
+                listenedTime += 1; // Incrementa el tiempo en segundos
+            }
+        
+            // Registrar reproducción después de 30 segundos
+            if (listenedTime == MIN_LISTEN_TIME) {
+                registerPlay(songs[currentSongIndex].id);
+            }
         });
 
         // Hacer la barra de progreso interactiva

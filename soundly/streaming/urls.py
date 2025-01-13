@@ -1,5 +1,6 @@
 # streaming/urls.py
 from django.urls import path
+from django.contrib.auth.views import LogoutView
 from . import views
 
 urlpatterns = [
@@ -15,5 +16,14 @@ urlpatterns = [
     path('playlists/<int:pk>/', views.PlaylistView.as_view(), name='playlist_detail'), 
     path('playlist/<int:pk>/delete/', views.PlaylistView.as_view(), name='playlist_delete'),
     path('playlist/<int:pk>/remove-song/<int:song_id>/', views.PlaylistView.as_view(), name='remove_song'),
-    path('play/recommended/<int:song_id>/', views.play_recommended_songs, name='play_recommended'),
+    path('play/recommended/<int:song_id>/', views.PlayRecommendedSongsView.as_view(), name='play_recommended'),
+    path('play/playlist/<int:playlist_id>/', views.PlayPlaylistSongsView.as_view(), name='play_playlist'),
+    path('add-to-playlist/', views.add_to_playlist, name='add_to_playlist'),
+    path('register-play/', views.register_play, name='register_play'),
+    path('profile/<str:username>/', views.UserProfileView.as_view(), name='user_profile'),
+    path('songs/delete/<int:song_id>/', views.DeleteSongView.as_view(), name='delete_song'),
+    path('albums/delete/<int:album_id>/', views.DeleteAlbumView.as_view(), name='delete_album'),
+    path('update-name/', views.update_name, name='update_name'),
+    path('logout/', LogoutView.as_view(next_page='/'), name='logout'),
+
 ]

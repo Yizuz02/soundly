@@ -55,6 +55,8 @@ body {
     border: 1px solid var(--text-100);
 }
 
+
+
 h1{
     font-family: 'Open Sans', sans-serif;
     font-weight: 340;
@@ -78,10 +80,20 @@ h2{
     justify-content: start;
 }
 
-.contenedor-estrella-1 img {
-    width: auto;
+.contenedor-cabecera-usuario{
     height: 130%;
+    width: auto;
     margin: 0;
+}
+
+.contenedor-cabecera-usuario img {
+    width: auto;
+    height: 100%;
+    margin: 0;
+}
+
+.contenedor-cabecera-usuario:hover img {
+    filter: brightness(70%);
 }
 
 .contenedor-estrella-2{
@@ -1400,6 +1412,7 @@ h1.seccion-2{
     justify-content: center;
     justify-items: center;
     align-items: center;
+    margin-left: 5%;
 }
 
 .song-info-container img{
@@ -1430,7 +1443,7 @@ h1.seccion-2{
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    margin-left: 3%;
+    margin-left: 1.5%;
 }
 /* Botones de volumen y progreso */
 .controls {
@@ -1695,15 +1708,253 @@ h1.seccion-2{
 
 .contenedor-add-song{
     display: flex;
-    width: 15%;
+    width: 22%;
     height: 80%;
     justify-content: center;
-    
+    align-content: flex-start;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 1.2vw;
+    flex-wrap: wrap ;
+    margin-left: 2%;
 }
 
 .contenedor-add-song-boton{
     display: flex;
-    width: 80%;
+    width: 50%;
     height: 10%;
     justify-content: center;
+}
+
+.contenedor-add-song-lista{
+    display: none;
+    width: 80%;
+    height: 55%;
+    justify-content: center;
+    align-content: flex-start;
+    border-radius: 50px / 50px; 
+    border: 1px solid var(--text-100);
+    margin-top: 10%;
+    overflow-y: auto;
+    flex-wrap: wrap;
+
+}
+
+.contenedor-add-song-titulo{
+    padding: 2%;
+    padding-top: 4%;
+    margin-bottom: 4%;
+    display: flex;
+    width: 100%;
+    height: fit-content;
+    text-align: center;
+    font-weight: 600;
+    align-items: center;
+    justify-items: center;
+    justify-content: center;
+}
+
+.contenedor-add-song-play{
+    padding: 3%;
+    display: flex;
+    width: 100%;
+    height: fit-content;
+    text-align: center;
+    align-items: center;
+    justify-items: center;
+    justify-content: center;
+    font-size: 1.2vw;
+    border: 0;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.contenedor-add-song-play:hover{
+    color: var(--bg-100);
+    background-color: var(--bg-200);
+}
+
+.contenedor-profile{
+    display: flex;
+    height: 85.5%;
+    align-items: center;
+    align-content: center;
+    width: 100%;
+    flex-wrap: wrap;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.contenedor-profile-user{
+    display: flex;
+    height: 30%;
+    justify-content: center;
+    justify-items: center;
+    align-content: flex-end;
+    align-items: flex-end;
+    width: 80%;
+    flex-wrap: wrap;
+    padding-left: 6%;
+}
+
+
+.contenedor-profile-user-info{
+    margin-left: 2%;
+    width: 80%;
+    flex-wrap: wrap;
+    height: fit-content;
+    display: flex;
+}
+
+.contenedor-profile-user h1{
+    font-size: 5vw;
+    margin: 0;
+    width: 100%;
+    height: fit-content;
+    font-weight: 800;
+    padding-bottom: 1%;
+}
+
+.contenedor-profile-user input{
+    display: flex;
+    font-size: 5vw;
+    margin: 0;
+    width: 100%;
+    font-weight: 800;
+    height: fit-content;
+}
+
+.contenedor-profile-user img{
+    width: 12.5%;
+    height: auto;
+    aspect-ratio: 1;
+    border: 15px solid var(--bg-200);
+    border-radius: 50%;
+    padding: 0;
+}
+
+.contenedor-ovalo-profile{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20%;
+    height: 50%;
+    padding: 0.8%;
+    border-radius: 50px / 50px; 
+    border: 1px solid var(--text-100);
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 2.4vh;
+    margin-right: 1%;
+    font-family: 'Open Sans', sans-serif;
+}
+
+
+.contenedor-profile-elements, .contenedor-profile-elements-2{
+    display: flex;
+    height: 42%;
+    align-content: flex-start;
+    align-items: flex-start;
+    width: 44%;
+    flex-wrap: wrap;
+    margin-left: 8%;
+    margin-top: 1%;
+    margin-bottom: 5%;
+    flex-wrap: wrap;
+}
+
+.contenedor-profile-elements-2{
+    margin-left: 2%;
+}
+
+.contenedor-profile-elements-title{
+    height: 10%;
+    width: 80%;
+    margin: 0;
+    padding-left: 3%;
+    font-size: 3vh;
+}
+
+.contenedor-profile-elements-songs{
+    display: flex;
+    flex-wrap: wrap;
+    height: 90%;
+    width: 96%;
+    padding-left: 2.4%;
+    padding-right: 2%;
+    overflow-y: auto;
+    direction: rtl;
+}
+
+.contenedor-profile-song{
+    display: flex;
+    flex-wrap: wrap;
+    height: fit-content;
+    justify-content: space-between;
+    align-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 1%;
+    font-size: 3vh;
+    direction:ltr;
+}
+
+.contenedor-profile-song img{
+    width: 15%;
+    height: auto;
+    aspect-ratio: 1;
+}
+
+.contenedor-profile-song-dato{
+    display: flex;
+    width: 25%;
+    height: fit-content;
+    text-align: center;
+    justify-items: center;
+    justify-content: center;
+}
+
+.contenedor-profile-song-dato p{
+    font-size: 2.5vh;
+}
+
+.contenedor-ovalo-borrar{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80%;
+    height: 80%;
+    padding: 4%;
+    border-radius: 50px / 50px; 
+    border: 1px solid var(--text-100);
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 2.4vh;
+    margin-right: 1%;
+    font-family: 'Open Sans', sans-serif;
+    display: none;
+}
+
+.contenedor-ovalo-guardar{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    height: fit-content;
+    padding: 1%;
+    padding-left: 2%;
+    padding-right: 2%;
+    border-radius: 50px / 50px; 
+    border: 1px solid var(--text-100);
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 2.4vh;
+    margin-right: 1%;
+    font-family: 'Open Sans', sans-serif;
+    position: absolute;
+    bottom: 4%;
+    right: 8%;
+    display: none;
+}
+
+.contenedor-ovalo-profile:hover, .contenedor-ovalo-borrar:hover, .contenedor-ovalo-guardar:hover{
+    background-color: var(--bg-300);
 }

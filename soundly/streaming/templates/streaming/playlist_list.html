@@ -49,7 +49,7 @@
                                 <h2 class="header-playlist-titulo">{{ playlist.name }}</h2>
                                 <p class="header-playlist-info-1">{{ playlist.description }}</p>
                                 <p class="header-playlist-info-2">{{ playlist.songs.count }} Canciones, {{ duration }}</p>
-                                <a href="" class="circle-button">
+                                <a href="{% url 'play_playlist' playlist.id %}" class="circle-button">
                                     <div class="triangle"></div>
                                 </a>
                                 <div class="borrar-playlist">
@@ -80,7 +80,7 @@
                             </div>
                             
                         {% empty %}
-                            <p>Aun no has creado ninguna playlist</p>
+                            <p>Aun no has agreado ninguna canción</p>
                         {% endfor %}
                     </div>
                     
