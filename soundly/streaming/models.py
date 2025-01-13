@@ -30,8 +30,6 @@ class Song(models.Model):
 
     def save(self, *args, **kwargs):
         try:
-            if not self.file.closed:
-                self.file.close()
             song_features = extract_audio_features(self.file)
             
             self.duration_ms = song_features["duration_ms"]
@@ -55,6 +53,7 @@ class Song(models.Model):
 
     def __str__(self):
         return self.title
+
 
 class Album(models.Model):
     title = models.CharField(max_length=200)  

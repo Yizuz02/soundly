@@ -42,23 +42,41 @@ def get_song_features(song):
 
 def recommend_songs_with_similarity(user):
     """
-    Genera recomendaciones basadas en la similitud de las características de las canciones.
+    Genera recomendaciones basadas en la similitud de las características de las canciones,
+    incluyendo información sobre los álbumes a los que pertenecen.
     """
+    # Obtener las preferencias del usuario
     preferences = get_user_preferences(user)
-    most_played_songs = preferences['most_played_or_liked']
+    most_played_songs = preferences.get('most_played_or_liked', [])
 
-    # Vectorizar las canciones más reproducidas
+    if not most_played_songs:
+        return []
+
+    # Vectorizar características de las canciones reproducidas
     played_features = np.array([get_song_features(song) for song in most_played_songs])
 
-    # Vectorizar todas las canciones de la base de datos
+    # Obtener todas las canciones excluyendo las ya reproducidas o favoritas
     all_songs = Song.objects.exclude(id__in=[song.id for song in most_played_songs])
 
+    if not all_songs.exists():
+        return []
+
+    # Vectorizar características de todas las canciones disponibles
     all_features = np.array([get_song_features(song) for song in all_songs])
+
     # Calcular similitud coseno
     similarities = cosine_similarity(played_features, all_features)
 
-    # Ordenar por similitud y seleccionar las canciones más parecidas
-    recommended_indices = np.argsort(-similarities.mean(axis=0))[:10]
+    # Promediar similitudes y ordenar por las más altas
+    similarity_scores = similarities.mean(axis=0)
+    recommended_indices = np.argsort(-similarity_scores)[:10]
+
+    # Seleccionar las canciones recomendadas
     recommendations = [all_songs[int(i)] for i in recommended_indices]
 
-    return recommendations
+    # Agregar álbumes relacionados a las canciones recomendadas
+    recommendations_with_albums = [
+        {'song': song, 'albums': song.albums.all()} for song in recommendations
+    ]
+
+    return recommendations_with_albums

@@ -1,10 +1,31 @@
-{% extends 'base.html' %}
-
-{% block content %}
-<h2>Create Playlist</h2>
-<form method="post">
+{% load static %}
+<form method="post" enctype="multipart/form-data" class="contenedor-crear-playlist">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-success">Save</button>
+    {{ playlist_form.non_field_errors }}
+    <div class="form-group7">
+        <div class="form-group-tag3">
+            {{ playlist_form.name.label_tag }}
+        </div>
+        <div class="form-group-input3">
+            {{ playlist_form.name }}
+        </div>
+    </div>
+    <div class="form-group7">
+        <div class="form-group-tag3">
+            {{ playlist_form.description.label_tag }}
+        </div>
+    </div>
+    {{ playlist_form.description }}
+    <script src="{% static 'js/jscolor.js' %}"></script>
+    <div class="form-group7">
+        <div class="form-group-tag3">
+            {{ playlist_form.color.label_tag }}
+        </div>
+        <div class="form-group-input3">
+            {{ playlist_form.color }}
+        </div>
+    </div>
+    <div class="contenedor-boton-crear-playlist">
+        <button type="submit" class="boton-ovalo-new-song">GUARDAR</button>
+    </div>
 </form>
-{% endblock %}

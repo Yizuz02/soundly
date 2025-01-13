@@ -1,11 +1,69 @@
-<h2>DESCUBRE</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <title>Discover Soundly</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'streaming/css/styles.css' %}">
+</head>
+<body>
+    <div class="contenedor-pagina">
+        {% include 'components/header2.html' with header_title="DESCUBRE" %}
+        <div class="contenedor-principal-upload">
+            <div class="contenedor-discover">
+                <div class="contenedor-discover-header">
+                    <div class="contenedor-discover-elemento-1"></div>
+                    <div class="contenedor-discover-titulo">Título</div>
+                    <div class="contenedor-discover-elemento">Álbum</div>
+                    <div class="contenedor-discover-elemento">Duración</div>
+                </div>
+                <div class="contenedor-discover-canciones">
+                    {% for item in recommendations %}
+                        <a class="contenedor-discover-cancion" href="{% url 'play_recommended' song_id=item.song.id %}">
+                            <div class="contenedor-discover-elemento-1">
+                                <div class="triangle-2"></div>
+                                {% if item.song.cover_image %}
+                                    <img src="{{ item.song.cover_image.url }}" alt="{{ item.song.title }}"/>
+                                {% else %}
+                                    <img src="/static/img/default.png" alt="Default Cover" />
+                                {% endif %}
+                            </div>
+                            <div class="contenedor-discover-titulo-1">
+                                <h3>{{ item.song.title }}</h3>
+                                <p>{{ item.song.user }}</p>
+                            </div>
+                            <div class="contenedor-discover-elemento">
+                                {% with item.song.albums.first as album %}
+                                    {% if album %}
+                                        <h3 href="">{{ album.title }}</h3>
+                                    {% else %}
+                                        <h3>-</h3>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                            {% load custom_filters %}
+                            <div class="contenedor-discover-elemento">
+                                <h3>{{ item.song.duration_ms|format_duration_ms }}</h3>
+                            </div>
+                        </a>
+                    {% empty %}
+                        <p>No hay recomendaciones disponibles.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            <p class="nota-5">&#9836;</p>
+            <a href="{% url 'home' %}" class="boton-regresar">
+                <img src="{% static 'img/back.png' %}" alt="Atras">
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>
 <ul>
-    {% for song in recommendations %}
-        <li>
-            <strong>{{ song.title }}</strong> - {{ song.user }}<br>
-            Género: {{ song.track_genre }}
-        </li>
-    {% empty %}
-        <p>No hay recomendaciones disponibles.</p>
-    {% endfor %}
+    
 </ul>

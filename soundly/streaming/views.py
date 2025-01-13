@@ -5,6 +5,7 @@ import json
 
 from click import File
 from django.http import JsonResponse
+from django.db.models import Sum
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
@@ -108,21 +109,21 @@ class UploadSongView(LoginRequiredMixin, FormView):
 
     def form_valid(self, form):
         # Asocia la canción al usuario autenticado
-        song = form.save(commit=False)
-        song.user = self.request.user
-
+        temp_song = form.save(commit=False)
+        song = Song.objects.create(
+                            title=temp_song.title,
+                            release_date=temp_song.release_date,
+                            cover_image=temp_song.cover_image,
+                            user = self.request.user,
+                        )
+        file_path = get_unique_file_path(settings.SONGS_DIR, os.path.basename(temp_song.file.name))
+        with open(file_path, 'wb') as temp_file:
+            for chunk in temp_song.file.chunks():
+                temp_file.write(chunk)
+        song.file.name = os.path.join('songs', os.path.basename(file_path))
         # Guarda la canción con los datos adicionales
         song.save()
         return super().form_valid(form)
-    
-class MySongsView(LoginRequiredMixin, ListView):
-    model = Song
-    template_name = 'streaming/my_songs.html'
-    context_object_name = 'songs'
-
-    def get_queryset(self):
-        # Filtra las canciones solo del usuario autenticado
-        return Song.objects.filter(user=self.request.user)
 
 @require_POST
 @csrf_protect
@@ -247,42 +248,93 @@ class PlaylistView(LoginRequiredMixin, View):
     def get(self, request, pk=None):
         if pk:
             # Obtener una playlist específica
-            playlist = get_object_or_404(Playlist, pk=pk, user=request.user)
-            return render(request, 'streaming/playlist_detail.html', {
-                'playlist': playlist,
-                'is_authenticated': self.request.user.is_authenticated,
-                'user': self.request.user
-            })
-        else:
-            # Listar todas las playlists del usuario
             playlists = Playlist.objects.filter(user=request.user)
+            playlist = get_object_or_404(Playlist, pk=pk, user=request.user)
+            total_duration = sum(song.duration_ms for song in playlist.songs.all())
+            
+            # Convertir a horas y minutos
+            total_duration_sec = total_duration // 1000
+            hours = total_duration_sec // 3600
+            minutes = (total_duration_sec % 3600) // 60
+            duration = f"{hours} h {minutes} min" if hours > 0 else f"{minutes} min"
+            
             return render(request, 'streaming/playlist_list.html', {
                 'playlists': playlists,
-                'is_authenticated': self.request.user.is_authenticated,
-                'user': self.request.user
+                'playlist': playlist,
+                'is_authenticated': request.user.is_authenticated,
+                'user': request.user,
+                'duration': duration
+            })
+        else:
+            playlists = Playlist.objects.filter(user=request.user)
+            playlist_form = PlaylistForm()
+            return render(request, 'streaming/playlist_list.html', {
+                'playlists': playlists,
+                'playlist': None,
+                'is_authenticated': request.user.is_authenticated,
+                'user': request.user,
+                'playlist_form': playlist_form,
             })
 
     def post(self, request):
-        # Crear una nueva playlist
-        form = PlaylistForm(request.POST)
-        if form.is_valid():
-            new_playlist = form.save(commit=False)
+        playlist_form = PlaylistForm(request.POST)
+        if playlist_form.is_valid():
+            new_playlist = playlist_form.save(commit=False)
             new_playlist.user = request.user
             new_playlist.save()
-            return redirect('playlist_list')  # Cambiar a la vista de la lista después de crear
-        return render(request, 'streaming/playlist_form.html', {
-            'form': form,
-            'is_authenticated': self.request.user.is_authenticated,
-            'user': self.request.user
+            return redirect('playlist_list')
+        return render(request, 'streaming/playlist_list.html', {
+            'is_authenticated': request.user.is_authenticated,
+            'user': request.user,
+            'playlist_form': playlist_form
         })
+
+    def delete(self, request, pk):
+        playlist = get_object_or_404(Playlist, pk=pk, user=request.user)
+        playlist.delete()
+        return JsonResponse({'status': 'success'})
+
+    def post(self, request, pk, song_id):
+        if request.method != 'POST':
+            return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+            
+        playlist = get_object_or_404(Playlist, pk=pk, user=request.user)
+        song = get_object_or_404(Song, pk=song_id)
+        playlist.songs.remove(song)
+        return JsonResponse({'status': 'success'})
 
 class RecommendationsView(LoginRequiredMixin, ListView):
     template_name = 'streaming/recommendations.html'
     context_object_name = 'recommendations'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Verificar si el usuario está autenticado
+        context.update({
+            'is_authenticated': self.request.user.is_authenticated,
+            'user': self.request.user
+        })
+        return context
+    
     def get_queryset(self):
         """
         Obtiene las recomendaciones para el usuario actual.
         """
         user = self.request.user
         return recommend_songs_with_similarity(user)
+    
+def play_recommended_songs(request, song_id):
+    # Obtener la canción seleccionada
+    selected_song = get_object_or_404(Song, id=song_id)
+
+    # Generar las recomendaciones
+    recommended_songs = recommend_songs_with_similarity(request.user)
+
+    # Reorganizar las canciones para empezar desde la seleccionada
+    start_song_index = next((index for index, element in enumerate(recommended_songs) if element['song'].id == selected_song.id), 0)
+    reordered_songs = recommended_songs[start_song_index:] + recommended_songs[:start_song_index]
+    
+    return render(request, 'streaming/play_songs.html', {
+        'selected_song': selected_song,
+        'songs': reordered_songs,
+    })

@@ -123,8 +123,17 @@ def load_audio_file(file_obj):
     
     try:
         # Usar librosa para cargar el archivo de audio
+        # Obtener duración en milisegundos
+        # Cargar el archivo de audio
+        ye, sir = librosa.load(absolute_path)
+    
+        # Obtener la duración en segundos
+        duration_sec = librosa.get_duration(y=ye, sr=sir)
+        
+        # Convertir la duración a milisegundos
+        duration_ms = duration_sec * 1000
         y, sr = librosa.load(absolute_path, offset=20, duration=29)
-        return y, sr, temp_path
+        return y, sr, temp_path, duration_ms
     except Exception as e:
         print(f"Error al cargar el archivo de audio: {e}")
         # Limpiar archivo temporal si la carga falla
@@ -143,13 +152,10 @@ def extract_audio_features(file_obj):
         dict: Diccionario con las características extraídas
     """
     try:
-        # Cargar el archivo de audio
-        y, sr, temp_path = load_audio_file(file_obj)
+        
+        y, sr, temp_path, duration_ms = load_audio_file(file_obj)
         
         # Calcular características de audio
-        # Obtener duración en milisegundos
-        duration_ms = len(y) / sr * 1000
-        
         # Calcular características rítmicas
         tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
         
@@ -202,6 +208,7 @@ def extract_audio_features(file_obj):
         
         # Obtener predicción de género
         feature = get_feature()
+        print("Feature extraida correctamente")
         genres_list = np.load(os.path.join(KERAS_MODELS_PATH, "genres.npy"), allow_pickle=True).tolist()
         predictions = loaded_ensemble.predict_top_3(feature, genres_list)
         generos = [t[0] for t in predictions]

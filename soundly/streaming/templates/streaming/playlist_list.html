@@ -6,33 +6,87 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
-    <title>Upload Soundly</title>
+    <title>Playlists Soundly</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'streaming/css/styles.css' %}">
 </head>
 <body>
     <div class="contenedor-pagina">
-        {% include 'components/header2.html' with header_title="SUBE TU MÚSICA" %}
+        {% include 'components/header2.html' with header_title="MIS PLAYLISTS" %}
         <div class="contenedor-principal-playlist">
             <div class="contenedor-lista-playlist">
                 <div class="contenedor-titulo-playlist">
                     <h2>Playlists</h2>
                 </div>
                 <div class="contenedor-songs-playlist">
-                    <div class="playlist-song">
-                        <img src="{% static 'img/default.png' %}" alt="Perfil">
-                    </div>
-                    
+                    <a href="{% url 'playlist_list' %}" class="playlist">
+                        <div class="playlist-create-logo"></div>
+                        <div class="playlist-info">
+                            <h3>Crear Playlist</h3>
+                        </div>
+                    </a>
+                    {% for playlist in playlists %}
+                        <a href="{% url 'playlist_detail' playlist.pk %}" class="playlist">
+                            <div class="playlist-cover" style="background-color: {{ playlist.color }};"></div>
+                            <div class="playlist-info">
+                                <h3>{{ playlist.name }}</h3>
+                                <p>{{ playlist.songs.count }} Canciones</p>
+                            </div>
+                        </a>
+                    {% empty %}
+                        <p>Aun no has creado ninguna playlist</p>
+                    {% endfor %}
                 </div>
-                <a href="" class="btn btn-primary">Create Playlist</a>
-                {% for playlist in playlists %}
-                    <a href="{% url 'playlist_detail' playlist.pk %}">{{ playlist.name }}</a>
-                {% empty %}
-                    <p>Aun no has creado ninguna playlist</p>
-                {% endfor %}
+                
+                    
             </div>
             <div class="contenedor-detalles-playlist">
-
+                {% if playlist %}
+                    <div class="contenedor-ver-playlist">
+                        <div class="contenedor-header-playlist">
+                            <div class="header-playlist-cover" style="background-color: {{ playlist.color }};"></div>
+                            <div class="header-playlist-info">
+                                <h2 class="header-playlist-titulo">{{ playlist.name }}</h2>
+                                <p class="header-playlist-info-1">{{ playlist.description }}</p>
+                                <p class="header-playlist-info-2">{{ playlist.songs.count }} Canciones, {{ duration }}</p>
+                                <a href="" class="circle-button">
+                                    <div class="triangle"></div>
+                                </a>
+                                <div class="borrar-playlist">
+                                    {% csrf_token %}
+                                    <button class="boton-ovalo-playlist" onclick="deletePlaylist({{ playlist.id }})">BORRAR</button>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        {% for song in playlist.songs.all  %}
+                            <div class="contenedor-song-playlist">
+                                {% if song.cover_image %}
+                                    <img src="{{ song.cover_image.url }}" alt="{{ song.title }}"/>
+                                {% else %}
+                                    <img src="/static/img/default.png" alt="Default Cover" />
+                                {% endif %}
+                                <div class="contenedor-song-playlist-title">
+                                    <h3>{{ song.title }}</h3>
+                                    <p>{{ song.user }}</p>
+                                </div>
+                                {% load custom_filters %}
+                                <div class="contenedor-song-playlist-dur">
+                                    <h3>{{ song.duration_ms|format_duration_ms }}</h3>
+                                </div>
+                                <div class="contenedor-song-playlist-del">
+                                    <button class="boton-ovalo-playlist" onclick="removeSong({{ playlist.id }}, {{ song.id }})">BORRAR</button>
+                                </div>
+                            </div>
+                            
+                        {% empty %}
+                            <p>Aun no has creado ninguna playlist</p>
+                        {% endfor %}
+                    </div>
+                    
+                {% else %}
+                    {% include 'components/playlist_form.html' with playlist_form=playlist_form %}
+                {% endif %}
             </div>
                 
             <p class="nota-3">&#9836;</p>
@@ -43,6 +97,69 @@
         </div>
         
     </div>
+    <script>
+        // Función para eliminar una playlist
+        function deletePlaylist(playlistId) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta playlist?')) {
+                fetch(`/playlist/${playlistId}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Recargar la página después de eliminar
+                        window.location.href = '/playlists/';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Hubo un error al eliminar la playlist');
+                });
+            }
+        }
+
+        // Función para eliminar una canción de la playlist
+        function removeSong(playlistId, songId) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta canción de la playlist?')) {
+                fetch(`/playlist/${playlistId}/remove-song/${songId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Recargar la página después de eliminar la canción
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Hubo un error al eliminar la canción');
+                });
+            }
+        }
+
+        // Función auxiliar para obtener el token CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
 </body>
 
 </html>

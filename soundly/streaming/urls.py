@@ -10,8 +10,10 @@ urlpatterns = [
     path('upload-song/', views.UploadSongView.as_view(), name='upload_song'),
     path('upload-album/', views.AlbumCreateView.as_view(), name='upload_album'),
     path('update_songs/', views.update_songs, name='update_songs'),
-    path('my-songs/', views.MySongsView.as_view(), name='my_songs'),
     path('discover/', views.RecommendationsView.as_view(), name='discover'),
-    path('playlists/', views.PlaylistView.as_view(), name='playlist_list'),  # Lista de playlists
-    path('playlists/<int:pk>/', views.PlaylistView.as_view(), name='playlist_detail'),  # Detalle de una playlist
+    path('playlists/', views.PlaylistView.as_view(), name='playlist_list'), 
+    path('playlists/<int:pk>/', views.PlaylistView.as_view(), name='playlist_detail'), 
+    path('playlist/<int:pk>/delete/', views.PlaylistView.as_view(), name='playlist_delete'),
+    path('playlist/<int:pk>/remove-song/<int:song_id>/', views.PlaylistView.as_view(), name='remove_song'),
+    path('play/recommended/<int:song_id>/', views.play_recommended_songs, name='play_recommended'),
 ]

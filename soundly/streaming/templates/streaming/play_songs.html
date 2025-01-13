@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    <title>Play Soundly</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'streaming/css/styles.css' %}">
+</head>
+<body>
+    <div class="contenedor-pagina">
+        {% include 'components/header2.html' with header_title="ESTAS ESCUCHANDO..." %}
+        <div class="contenedor-principal-play">
+            <div class="song-info-container">
+                <img id="song-cover" src="/static/img/default.png" alt="Default Cover" />
+                <h2 id="song-title"></h2>
+                <p id="song-user"></p>
+            </div>
+            <div class="player-container">
+                <div class="contenedor-pl-titulo">
+                    <div class="contenedor-ovalo-pl">
+                        <h2>SIGUIENTE</h2>
+                    </div>
+                </div>
+                <div class="contenedor-next-songs" id="remaining-songs">
+                </div>
+                <!-- Controles de reproducción -->
+                <div class="volume-container">
+                    <input id="volume-control" type="range" min="0" max="1" step="0.01">
+                </div>
+                <div class="controls-2">
+                    <button id="see-album">
+                        <img src="/static/img/shuffle_button.png" alt="Shuffle Button"/>
+                    </button>
+                    <button id="volume-toggle">
+                        <img src="/static/img/volume_button.png" alt="Volume Button"/>
+                    </button>
+                    <button id="see-album">
+                        <img src="/static/img/album_button.png" alt="Album Button" />
+                    </button>
+                </div>
+    
+                
+        
+                <!-- Barra de progreso personalizada -->
+                <div class="progress-bar">
+                    <div id="progress-bar-filled" class="progress-bar-filled"></div>
+                    <div id="progress-bar-tooltip" class="progress-bar-tooltip"></div> 
+                </div>
+
+                <div class="controls">
+                    <button id="prev-button" class="back-button">
+                        <div class="triangle-left"></div>
+                        <div class="triangle-left-two"></div>
+                    </button>
+                    <button id="play-pause-button" class="play-button">
+                        <div id="play-pause-icon" class="triangle-play"></div>
+                    </button>
+                    <button id="next-button"class="back-button">
+                        <div class="triangle-right"></div>
+                        <div class="triangle-right-two"></div>
+                    </button>
+                </div>
+        
+                <!-- Reproductor de audio (componente oculto) -->
+                <audio id="audio-player" class="audio-bar" controls>
+                    <source id="audio-source" src="" type="audio/mpeg">
+                    Tu navegador no soporta la reproducción de audio.
+                </audio>
+            </div>
+            <div class="contenedor-add-song">
+                <div class="contenedor-add-song-boton">
+                    <button id="show-menu" class="contenedor-ovalo-boton">
+                        <strong>+</strong>
+                    </button>
+                </div>
+            </div>
+            <p class="nota-5">&#9836;</p>
+            <a href="{% url 'discover' %}" class="boton-regresar">
+                <img src="{% static 'img/back.png' %}" alt="Atras">
+            </a>
+        </div>
+        
+    </div>
+    
+
+    <script>
+        // Lista de canciones desde el servidor
+        const songs = [
+            {% for item in songs %}
+                {
+                    title: "{{ item.song.title|escapejs }}",
+                    file: "{{ item.song.file.url|escapejs }}",
+                    {% if item.song.cover_image %}
+                        cover: "{{ item.song.cover_image.url|escapejs }}",
+                    {% else %}
+                    cover: "/static/img/default.png",
+                    {% endif %}
+                    user: "{{ item.song.user|escapejs }}",
+                    
+                },
+            {% endfor %}
+        ];
+
+        let currentSongIndex = 0;
+        const audioPlayer = document.getElementById('audio-player');
+        const audioSource = document.getElementById('audio-source');
+        const songTitle = document.getElementById('song-title');
+        const songCover = document.getElementById('song-cover');
+        const songUser = document.getElementById('song-user');
+        const playPauseButton = document.getElementById('play-pause-button');
+        const playPauseIcon = document.getElementById('play-pause-icon');
+        const volumeControl = document.getElementById('volume-control');
+        const volumeToggleButton = document.getElementById('volume-toggle');
+        const volumeContainer = document.querySelector('.volume-container');
+        const inputRange = document.getElementById("volumeRange");
+    
+        const progressBarFilled = document.getElementById('progress-bar-filled');
+        const progressBar = document.querySelector('.progress-bar');
+        const progressBarTooltip = document.getElementById('progress-bar-tooltip');
+        
+
+        function displayRemainingSongs() {
+            const remainingSongsContainer = document.getElementById('remaining-songs');
+            remainingSongsContainer.innerHTML = '';  // Limpiar el contenedor antes de agregar nuevas canciones
+        
+            // Obtener las canciones sobrantes
+            const remainingSongs = songs.slice(currentSongIndex + 1);
+        
+            remainingSongs.forEach((song) => {
+                const songItem = document.createElement('div');
+                songItem.innerHTML = `
+                        <p><strong>${song.title}</strong></p>
+                        <p>${song.user}</p>
+                `;
+                songItem.className = "contenedor-next-song";
+                remainingSongsContainer.appendChild(songItem);
+            });
+        }
+
+        // Cargar canción
+        function loadSong(index) {
+            if (index < 0 || index >= songs.length) return;
+
+            const song = songs[index];
+            songTitle.textContent = song.title;
+            songUser.textContent = song.user;
+            songCover.src = song.cover;
+            audioSource.src = song.file;
+            audioPlayer.load();
+            audioPlayer.play();
+            playPauseIcon.className = 'lines-pause';// Cambiar ícono a pausa
+            displayRemainingSongs();
+        }
+
+        // Alternar entre play y pausa
+        playPauseButton.addEventListener('click', () => {
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                playPauseIcon.className = 'lines-pause';
+            } else {
+                audioPlayer.pause();
+                playPauseIcon.className = 'triangle-play';
+            }
+        });
+
+        // Botón anterior
+        document.getElementById('prev-button').addEventListener('click', () => {
+            if (currentSongIndex > 0) {
+                currentSongIndex--;
+                loadSong(currentSongIndex);
+            }
+        });
+
+        // Botón siguiente
+        document.getElementById('next-button').addEventListener('click', () => {
+            if (currentSongIndex < songs.length - 1) {
+                currentSongIndex++;
+                loadSong(currentSongIndex);
+            }
+        });
+
+        // Reproducción automática al terminar
+        audioPlayer.addEventListener('ended', () => {
+            if (currentSongIndex < songs.length - 1) {
+                currentSongIndex++;
+                loadSong(currentSongIndex);
+            }
+        });
+
+        // Control de volumen
+        volumeControl.addEventListener('input', (e) => {
+            audioPlayer.volume = e.target.value;
+        });
+
+        // Toggle para mostrar/ocultar la barra de volumen
+        volumeToggleButton.addEventListener('click', () => {
+            volumeContainer.style.display = volumeContainer.style.display === 'none' ? 'block' : 'none';
+            const ratio = (volumeControl.value - volumeControl.min) / (volumeControl.max - volumeControl.min) * 100;
+            volumeControl.style.background = `linear-gradient(90deg, ${activeColor} ${ratio}%, ${inactiveColor} ${ratio}%)`;
+        });
+
+
+        // Actualizar la barra de progreso
+        audioPlayer.addEventListener('timeupdate', () => {
+            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            progressBarFilled.style.width = progress + '%';
+        });
+
+        // Hacer la barra de progreso interactiva
+        progressBar.addEventListener('click', (e) => {
+            const progressWidth = progressBar.clientWidth;
+            const clickX = e.offsetX;
+            const newTime = (clickX / progressWidth) * audioPlayer.duration;
+            audioPlayer.currentTime = newTime;
+        });
+
+        // Mostrar tooltip de avance en tiempo real
+        progressBar.addEventListener('mousedown', () => {
+            progressBar.addEventListener('mousemove', showTooltip);
+        });
+
+        progressBar.addEventListener('mouseup', () => {
+            progressBar.removeEventListener('mousemove', showTooltip);
+        });
+
+        const activeColor = "#c5c5ff";
+        const inactiveColor = "#2d1343";
+
+        volumeControl.addEventListener("input", function() {
+        const ratio = (this.value - this.min) / (this.max - this.min) * 100;
+        this.style.background = `linear-gradient(90deg, ${activeColor} ${ratio}%, ${inactiveColor} ${ratio}%)`;
+        });
+
+        // Función para mostrar el tooltip al mover el ratón
+        function showTooltip(e) {
+            const progressWidth = progressBar.clientWidth;
+            const mouseX = e.offsetX;
+            const newTime = (mouseX / progressWidth) * audioPlayer.duration;
+            const tooltipPosition = (mouseX / progressWidth) * 100;
+
+            progressBarTooltip.style.left = `calc(${tooltipPosition}% - 30px)`;
+            progressBarTooltip.style.display = 'block';
+            progressBarTooltip.textContent = formatTime(newTime);
+        }
+
+        // Formatear tiempo en minutos y segundos
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs < 10 ? '0' + secs : secs}`;
+        }
+
+        // Cargar la primera canción al iniciar
+        loadSong(currentSongIndex);
+    </script>
+</body>
+</html>

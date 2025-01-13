@@ -163,8 +163,12 @@ class PlaylistForm(forms.ModelForm):
     class Meta:
         model = Playlist
         fields = ['name', 'description', 'color']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        labels = {
+            'name': 'Título',
+            'description': 'Descripción',
+            'color': 'Color'
         }
-        color = forms.CharField(widget=ColorWidget())
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control-2'}),
+            'description': forms.Textarea(attrs={'class': 'form-text', 'rows': 3}),
+        }
